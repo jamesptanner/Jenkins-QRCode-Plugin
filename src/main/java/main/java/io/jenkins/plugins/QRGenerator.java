@@ -53,8 +53,8 @@ public class QRGenerator extends Builder implements SimpleBuildStep {
     @Override
     public void perform(@Nonnull Run<?, ?> run, @Nonnull FilePath filePath, @Nonnull Launcher launcher, @Nonnull TaskListener taskListener) throws InterruptedException, IOException {
         EnvVars env = run.getEnvironment(taskListener);
-        final String path = ((EnvVars) env).expand(this.path);
-        final String data = ((EnvVars) env).expand(this.data);
+        final String path = env.expand(this.path);
+        final String data = env.expand(this.data);
 
         taskListener.getLogger().println("Generating QR code for " + data);
         final File absolutePath = new File(run.getRootDir(),path);
@@ -68,7 +68,7 @@ public class QRGenerator extends Builder implements SimpleBuildStep {
         taskListener.getLogger().println("QR Code saved at " + qrfp_dest);
     }
 
-    @Symbol("QRCode Generator")
+    @Symbol("generateqrcode")
     @Extension
     public static final class DiscriptorImpl extends BuildStepDescriptor<Builder> {
 
