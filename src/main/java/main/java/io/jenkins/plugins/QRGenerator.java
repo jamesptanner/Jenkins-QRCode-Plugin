@@ -53,26 +53,29 @@ public class QRGenerator extends Builder implements SimpleBuildStep {
     @Override
     public void perform(@Nonnull Run<?, ?> run, @Nonnull FilePath filePath, @Nonnull Launcher launcher, @Nonnull TaskListener taskListener) throws InterruptedException, IOException {
         EnvVars env = run.getEnvironment(taskListener);
-        final String path = env.expand(this.path);
-        final String data = env.expand(this.data);
+        final String expandedPath = env.expand(this.path);
+        final String expandedData = env.expand(this.data);
         final String workspace = env.expand("${WORKSPACE}");
 
-        taskListener.getLogger().println("Generating QR code for " + (data.length() < 50 ? data : data.substring(0,50)));
-        String absolutePathStr = (path.contains(workspace) || new File(path).isAbsolute()) ? path : workspace + "/" + path;
+        taskListener.getLogger().println("Generating QR code for " + expandedData);
+        String absolutePathStr = (expandedPath.contains(workspace) || new File(expandedPath).isAbsolute()) ? expandedPath : workspace + File.separator + expandedPath;
         absolutePathStr = absolutePathStr.replace("\\", File.separator);
         absolutePathStr = absolutePathStr.replace("/", File.separator);
 
+        taskListener.getLogger().println("Saving to "+ absolutePathStr);
 
-        final File absolutePath = new File(absolutePathStr);
-        absolutePath.mkdirs();
-        QrCode qr0 = QrCode.encodeText(data, QrCode.Ecc.MEDIUM);
+        File tmpImg = File.createTempFile("img","png");
+
+        FilePath qrfpSource = new FilePath(tmpImg);
+
+        QrCode qr0 = QrCode.encodeText(expandedData, QrCode.Ecc.MEDIUM);
         BufferedImage img = qr0.toImage(4, 10);
-        ImageIO.write(img, "png", absolutePath);
-        FilePath qrfp_source = new FilePath(absolutePath);
-        FilePath qrfp_dest = filePath.child(path);
-        qrfp_dest.copyFrom(qrfp_source);
-        absolutePath.delete();
-        taskListener.getLogger().println("QR Code saved at " + qrfp_dest);
+        ImageIO.setUseCache(false);
+        ImageIO.write(img, "png", tmpImg);
+        FilePath qrfpDest = filePath.child(expandedPath);
+        qrfpDest.copyFrom(qrfpSource);
+        tmpImg.delete();
+        taskListener.getLogger().println("QR Code saved at " + qrfpDest);
     }
 
     @Symbol("generateqrcode")
