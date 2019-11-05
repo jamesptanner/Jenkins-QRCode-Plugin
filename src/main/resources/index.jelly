@@ -1,4 +1,4 @@
 <?jelly escape-by-default='true'?>
 <div>
-    Carrot
+    Provides a build step to generate a QR code containing the provided data.
 </div>

@@ -55,9 +55,16 @@ public class QRGenerator extends Builder implements SimpleBuildStep {
         EnvVars env = run.getEnvironment(taskListener);
         final String path = env.expand(this.path);
         final String data = env.expand(this.data);
+        final String workspace = env.expand("${WORKSPACE}");
 
-        taskListener.getLogger().println("Generating QR code for " + data);
-        final File absolutePath = new File(run.getRootDir(),path);
+        taskListener.getLogger().println("Generating QR code for " + (data.length() < 50 ? data : data.substring(0,50)));
+        String absolutePathStr = (path.contains(workspace) || new File(path).isAbsolute()) ? path : workspace + "/" + path;
+        absolutePathStr = absolutePathStr.replace("\\", File.separator);
+        absolutePathStr = absolutePathStr.replace("/", File.separator);
+
+
+        final File absolutePath = new File(absolutePathStr);
+        absolutePath.mkdirs();
         QrCode qr0 = QrCode.encodeText(data, QrCode.Ecc.MEDIUM);
         BufferedImage img = qr0.toImage(4, 10);
         ImageIO.write(img, "png", absolutePath);
